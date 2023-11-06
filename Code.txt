@@ -1,0 +1,116 @@
+Sub stockAnalysis()
+    For Each ws In Worksheets
+        ws.Activate
+        
+        Dim lastrow As Long
+        lastrow = ws.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        Range("K2:K" & lastrow).NumberFormat = "0.00%"
+        Cells(2, 17).NumberFormat = "0.00%"
+        Cells(3, 17).NumberFormat = "0.00%"
+        
+        Dim tickerSymbol As String
+        Dim totalVolume As Variant
+        Dim yearlyChangeOpen As Double
+        Dim percentageChange As Double
+        Dim yearlyChangeClose As Double
+        Dim newTableRowNum As Integer
+        Dim yearlyChange As Double
+        Dim percentChange As Double
+        Dim isFirstTicker As Boolean
+        Dim greatestPercentIncrease As Double
+        Dim greatestPercentDecrease As Double
+        Dim greatestTotalVolume As Variant
+        Dim findRowNum As Integer
+                            
+        
+        totalVolume = 0
+        yearlyChangeOpen = 0
+        yearlyChangeClose = 0
+        percentageChange = 0
+        newTableRowNum = 2
+        isFirstTicker = True
+        
+        greatestPercentDecrease = 0
+        greatestPercentIncrease = 0
+        greatestTotalVolume = 0
+        
+        
+        Cells(1, 9).Value = "Ticker"
+        Cells(1, 10).Value = "Yearly Change"
+        Cells(1, 11).Value = "Percent Change"
+        Cells(1, 12).Value = "Total Stock Volume"
+        
+        Cells(1, 16).Value = "Ticker"
+        Cells(1, 17).Value = "Value"
+        Cells(2, 15).Value = "Greatest % Increase"
+        Cells(3, 15).Value = "Greatest % Decrease"
+        Cells(4, 15).Value = "Greatest Total Volume"
+                
+        
+        For i = 2 To lastrow - 1
+            
+            If (Cells(i + 1, 1).Value <> Cells(i, 1).Value) Then
+                            
+                Cells(newTableRowNum, 9).Value = Cells(i, 1).Value
+                Cells(newTableRowNum, 12).Value = totalVolume
+                
+                yearlyChangeClose = Cells(i, 6).Value
+                            
+                yearlyChange = yearlyChangeClose - yearlyChangeOpen
+                If (Sgn(yearlyChange) = -1) Then
+                    Cells(newTableRowNum, 10).Interior.ColorIndex = 3
+                Else
+                    Cells(newTableRowNum, 10).Interior.ColorIndex = 4
+                End If
+                
+                Cells(newTableRowNum, 10).Value = yearlyChange
+                
+                percentChange = ((yearlyChangeClose - yearlyChangeOpen) / yearlyChangeOpen)
+                Cells(newTableRowNum, 11).Value = percentChange
+                
+                yearlyChangeOpen = 0
+                yearlyChangeClose = 0
+                percentageChange = 0
+                totalVolume = 0
+                isFirstTicker = True
+                
+                
+                newTableRowNum = newTableRowNum + 1
+                
+             Else
+                totalVolume = totalVolume + Cells(i, 7).Value
+                If (isFirstTicker = True) Then
+                    yearlyChangeOpen = Cells(i, 3).Value
+                    isFirstTicker = False
+                    
+                End If
+                
+            End If
+        Next i
+        
+        Set r = Range("K2:K" & Rows.Count)
+        greatestPercentDecrease = Application.WorksheetFunction.Min(r)
+        greatestPercentIncrease = Application.WorksheetFunction.Max(r)
+        
+        Set v = Range("L2:L" & Rows.Count)
+        greatestTotalVolume = Application.WorksheetFunction.Max(v)
+              
+        
+        Cells(2, 17).Value = greatestPercentIncrease
+        Cells(3, 17).Value = greatestPercentDecrease
+        Cells(4, 17).Value = greatestTotalVolume
+        
+       
+        findRowNum = Range("K:K").Find(CStr(greatestPercentDecrease * 100) + "%").Row
+        Cells(3, 16).Value = Cells(findRowNum, 9).Value
+        
+        findRowNum = ws.Range("K:K").Find(CStr(greatestPercentIncrease * 100) + "%").Row
+        Cells(2, 16).Value = Cells(findRowNum, 9).Value
+        
+        findRowNum = ws.Range("L:L").Find(Cells(4, 17).Value).Row
+        Cells(4, 16).Value = Cells(findRowNum, 9).Value
+        
+    Next ws
+    MsgBox ("Finished processing all the sheets!!")
+End Sub
